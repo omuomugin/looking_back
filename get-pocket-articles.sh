@@ -18,6 +18,8 @@ POCKET_ACCESS_KEY=$(curl "https://getpocket.com/v3/oauth/authorize?consumer_key=
 echo "[INFO] your access key: $POCKET_ACCESS_KEY"
 
 # Display a monthly count of the number of articles read
+## 5000 article seems to be the limit for 1 API call (cannot find in document)
+## when reached to 5000, use count and offset to retrieve more data.
 echo "[INFO] getting time read for archived articles by month"
 curl -s -X POST 'https://getpocket.com/v3/get' \
     -d consumer_key=${POCKET_PROJECT_KEY} \
@@ -29,22 +31,13 @@ curl -s -X POST 'https://getpocket.com/v3/get' \
     jq 'group_by(.) | map({key: .[0], value: length}) | reverse | from_entries'
 
 # Display a monthly count of the number of articles piled up.
-## Too many to retrieve so dividing with state.
+## 5000 article seems to be the limit for 1 API call (cannot find in document)
+## when reached to 5000, use count and offset to retrieve more data.
 echo "[INFO] getting time added for unread articles by month"
 curl -s -X POST 'https://getpocket.com/v3/get' \
     -d consumer_key=${POCKET_PROJECT_KEY} \
     -d access_token="${POCKET_ACCESS_KEY}" \
-    -d state='unread' \
-    -d sort='newest' | \
-    jq '.list[] | .time_added | tonumber | strftime("%Y-%m")' | \
-    jq -s '.' | \
-    jq 'group_by(.) | map({key: .[0], value: length}) | reverse | from_entries'
-
-echo "[INFO] getting time added for archived articles by month"
-curl -s -X POST 'https://getpocket.com/v3/get' \
-    -d consumer_key=${POCKET_PROJECT_KEY} \
-    -d access_token="${POCKET_ACCESS_KEY}" \
-    -d state='archive' \
+    -d state='all' \
     -d sort='newest' | \
     jq '.list[] | .time_added | tonumber | strftime("%Y-%m")' | \
     jq -s '.' | \
